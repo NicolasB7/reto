@@ -75,6 +75,13 @@ const save_materia = async (req, res) => {
         });
         return;
     }
+    if (grado < 1) {
+        res.status(500).json({
+            'ok': false,
+            'mensaje': 'El grado debe ser mayor a 0'
+        });
+        return;
+    }
     if (typeof(ID_Carrera) !== "number") {
         res.status(500).json({
             'ok': false,
@@ -87,27 +94,27 @@ const save_materia = async (req, res) => {
         const data = [nombre, grado, ID_Carrera];
         
         try{
-            const b_carrera = await conn.query("SELECT * FROM carrera WHERE ID_Carrera = ?", ID_Carrera);
-            const id = b_carrera.find(b_carrera => b_carrera.ID_Carrera === ID_Carrera).ID_Carrera;
+            const b_carrera = await conn.query("SELECT * FROM carrera");
+            const b_carrera2 = b_carrera.map(b_carrera => b_carrera.ID_Carrera);
+            const id_carrera = b_carrera2.find(x => x === ID_Carrera);
 
-            if (id === ID_Carrera) {
-                try {
-                    const query = await conn.query("INSERT INTO materia(nombre, grado, ID_Carrera) VALUES(?, ?, ?)", data);
-                    console.log(query);
-                    
-                    res.status(201).json({
-                        'ok': true,
-                        'mensaje': 'la materia fue registrado'
-                    })
-                    conn.end();
-                } catch (error) {
-                    res.status(500).json({
-                        'ok': false,
-                        'mensaje': 'algo salio mal'
-                    })
-                    conn.end();
-                }
+            if (id_carrera === undefined) {
+                res.status(500).json({
+                    'ok': false,
+                    'mensaje': 'La carrera no existe'
+                })
+                conn.end();
+                return;
             }
+
+            const query = await conn.query("INSERT INTO materia(nombre, grado, ID_Carrera) VALUES(?, ?, ?)", data);
+            console.log(query);
+                
+            res.status(201).json({
+                'ok': true,
+                'mensaje': 'la materia fue registrado'
+            })
+            conn.end();
         }catch(error){
             res.status(500).json({
                 'ok': false,
